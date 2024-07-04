@@ -25,35 +25,35 @@ const DragAndDropExample: React.FC = () => {
   const [destinationBoxItems, setDestinationBoxItems] = useState<Item[]>([]);
   const [activeTab, setActiveTab] = useState<string>("header");
 
-  const onDragEnd = (result: any) => {
+  const onDragEnd = (result: DropResult) => {
     const { source, destination } = result;
-
+  
     if (!destination) {
       return;
     }
-
-    if (destination.droppableId === "source-box") {
+  
+    if (destination.droppableId === "destination-box") {
       if (source.droppableId === "destination-box") {
-        const newItems = [...items[activeTab]];
-        const [reorderedItem] = destinationBoxItems.splice(source.index, 1);
-        newItems.splice(destination.index, 0, reorderedItem);
-        setItems({ ...items, [activeTab]: newItems });
-        setDestinationBoxItems(destinationBoxItems);
-      }
-    } else if (destination.droppableId === "destination-box") {
-      if (source.droppableId === "source-box") {
-        const newItems = [...items[activeTab]];
+        // Reorder within the destination box
+        const newItems = [...destinationBoxItems];
         const [reorderedItem] = newItems.splice(source.index, 1);
-        setDestinationBoxItems([...destinationBoxItems, reorderedItem]);
-        setItems({ ...items, [activeTab]: newItems });
-      } else {
-        const newDestinationItems = [...destinationBoxItems];
-        const [reorderedItem] = newDestinationItems.splice(source.index, 1);
-        newDestinationItems.splice(destination.index, 0, reorderedItem);
-        setDestinationBoxItems(newDestinationItems);
+        newItems.splice(destination.index, 0, reorderedItem);
+        setDestinationBoxItems(newItems);
+      } else if (source.droppableId === "source-box") {
+        // Move from source box to destination box
+        const draggedItem = items[activeTab][source.index];
+        setDestinationBoxItems(prevItems => [...prevItems, draggedItem]);
+      }
+    } else if (destination.droppableId === "source-box") {
+      if (source.droppableId === "destination-box") {
+        // Move from destination box back to source box
+        const draggedItem = destinationBoxItems[source.index];
+        setDestinationBoxItems(prevItems =>
+          prevItems.filter((_, index) => index !== source.index)
+        );
       }
     }
-  };
+  };  
 
   const handleTabClick = (tab: string) => {
     setActiveTab(tab);
