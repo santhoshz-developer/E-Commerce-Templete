@@ -6,13 +6,24 @@ import {
 } from "react-beautiful-dnd-next";
 import { initialItems } from "@/config/DragDrop";
 import {
-  DeployButton,
-  DeployButtonContainer,
+  DraggableItem,
+  CloseButton,
+  HeaderDropBox,
+  BodyDropBox,
+  FooterDropBox,
   MainContent,
+  DroppableContainer,
+  DeployButtonContainer,
+  DeployButton,
   Sidebar,
-  TabButton,
   TabsContainer,
+  TabButton,
+  DroppableItemsContainer,
+  DragHandle,
+  EmptyBoxMessage,
 } from "./TempleteCreation.style";
+import { MdDragIndicator } from "react-icons/md";
+import { IoClose } from "react-icons/io5";
 
 interface Item {
   id: string;
@@ -20,193 +31,207 @@ interface Item {
   imageUrl: string;
 }
 
-const DragAndDropExample: React.FC = () => {
-  const [items, setItems] = useState<{ [key: string]: Item[] }>(initialItems);
-  const [destinationBoxItems, setDestinationBoxItems] = useState<Item[]>([]);
-  const [activeTab, setActiveTab] = useState<string>("header");
+export type ItemsMap = {
+  header: Item[];
+  body: Item[];
+  footer: Item[];
+};
 
-  const onDragEnd = (result: DropResult) => {
+const DragAndDropExample: React.FC = () => {
+  const [items, setItems] = useState<ItemsMap>(initialItems);
+  const [destinationBoxItems, setDestinationBoxItems] = useState<Item[]>([]);
+  const [activeTab, setActiveTab] = useState<"header" | "body" | "footer">(
+    "header"
+  );
+
+  const onDragEnd = (result: any) => {
     const { source, destination } = result;
-  
     if (!destination) {
       return;
     }
-  
     if (destination.droppableId === "destination-box") {
-      if (source.droppableId === "destination-box") {
-        // Reorder within the destination box
-        const newItems = [...destinationBoxItems];
-        const [reorderedItem] = newItems.splice(source.index, 1);
-        newItems.splice(destination.index, 0, reorderedItem);
-        setDestinationBoxItems(newItems);
-      } else if (source.droppableId === "source-box") {
-        // Move from source box to destination box
-        const draggedItem = items[activeTab][source.index];
-        setDestinationBoxItems(prevItems => [...prevItems, draggedItem]);
-      }
-    } else if (destination.droppableId === "source-box") {
-      if (source.droppableId === "destination-box") {
-        // Move from destination box back to source box
-        const draggedItem = destinationBoxItems[source.index];
-        setDestinationBoxItems(prevItems =>
-          prevItems.filter((_, index) => index !== source.index)
-        );
-      }
+      handleDestinationBoxDrop(source, destination);
     }
-  };  
+  };
 
-  const handleTabClick = (tab: string) => {
+  const handleDestinationBoxDrop = (source: any, destination: any) => {
+    if (source.droppableId === "destination-box") {
+      // Reorder within the destination box
+      const newItems = [...destinationBoxItems];
+      const [reorderedItem] = newItems.splice(source.index, 1);
+      newItems.splice(destination.index, 0, reorderedItem);
+      setDestinationBoxItems(newItems);
+    } else if (source.droppableId === "source-box") {
+      // Move from source box to destination box
+      const draggedItem = createDraggedItem(source);
+      const newDestinationItems = [...destinationBoxItems];
+      if (activeTab === "header") {
+        newDestinationItems.unshift(draggedItem); // Insert at the top
+      } else if (activeTab === "body") {
+        const middleIndex = Math.ceil(newDestinationItems.length / 2);
+        newDestinationItems.splice(middleIndex, 0, draggedItem); // Insert in the middle
+      } else if (activeTab === "footer") {
+        newDestinationItems.push(draggedItem); // Insert at the bottom
+      }
+      setDestinationBoxItems(newDestinationItems);
+    }
+  };
+
+  const createDraggedItem = (source: any) => {
+    const draggedItem = {
+      ...items[activeTab as keyof ItemsMap][source.index],
+      showDeleteButton: false,
+      id: `${
+        items[activeTab as keyof ItemsMap][source.index].id
+      }-${Date.now()}`,
+    };
+    return draggedItem as Item;
+  };
+
+  const handleTabClick = (tab: "header" | "body" | "footer") => {
     setActiveTab(tab);
   };
 
   const handleDeploy = () => {
-    // Convert destinationBoxItems to JSON format
     const jsonData = JSON.stringify(destinationBoxItems);
-    console.log(jsonData); // Output JSON data to console or send it wherever needed
+    console.log(jsonData);
+  };
+
+  const handleRemoveItem = (
+    itemId: string,
+    source: "source" | "destination"
+  ) => {
+    if (source === "source") {
+      setItems((prevItems) => ({
+        ...prevItems,
+        [activeTab]: prevItems[activeTab].filter((item) => item.id !== itemId),
+      }));
+    } else if (source === "destination") {
+      setDestinationBoxItems((prevItems) =>
+        prevItems.filter((item) => item.id !== itemId)
+      );
+    }
+  };
+
+  const renderDraggableItem = (
+    item: Item,
+    index: number,
+    source: "source" | "destination"
+  ) => (
+    <Draggable key={item.id} draggableId={item.id} index={index}>
+      {(provided: any) => (
+        <DraggableItem
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          style={{ ...provided.draggableProps.style }}
+        >
+          {renderDropBox(item, provided)}
+          {source === "destination" && (
+            <CloseButton
+              onClick={() => handleRemoveItem(item.id, "destination")}
+            >
+              <IoClose />
+            </CloseButton>
+          )}
+        </DraggableItem>
+      )}
+    </Draggable>
+  );
+
+  const renderDeployButton = () => {
+    return (
+      <DeployButtonContainer>
+        <DeployButton onClick={handleDeploy}>Deploy</DeployButton>
+      </DeployButtonContainer>
+    );
+  };
+
+  const renderDropBox = (item: Item, provided: any) => {
+    switch (activeTab) {
+      case "header":
+        return (
+          <HeaderDropBox>
+            <DragHandle {...provided.dragHandleProps}>
+              <MdDragIndicator />
+            </DragHandle>
+            <img src={item.imageUrl} width={"100%"} alt={item.content} />
+          </HeaderDropBox>
+        );
+      case "body":
+        return (
+          <BodyDropBox>
+            <DragHandle {...provided.dragHandleProps}>
+              <MdDragIndicator />
+            </DragHandle>
+            <img src={item.imageUrl} width={"100%"} alt={item.content} />
+          </BodyDropBox>
+        );
+      case "footer":
+        return (
+          <FooterDropBox>
+            <DragHandle {...provided.dragHandleProps}>
+              <MdDragIndicator />
+            </DragHandle>
+            <img src={item.imageUrl} width={"100%"} alt={item.content} />
+          </FooterDropBox>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div style={{ display: "flex" }}>
-        {/* MainContent - Left side */}
         <MainContent>
           <Droppable droppableId="destination-box">
-            {(provided: any, snapshot: any) => (
-              <div
+            {(provided: any) => (
+              <DroppableContainer
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                style={{
-                  minHeight: "100%",
-                  border: "1px solid #ddd",
-                  padding: "10px",
-                  backgroundColor: snapshot.isDraggingOver
-                    ? "lightblue"
-                    : "inherit",
-                }}
               >
-                {destinationBoxItems.length === 0 && (
-                  <div
-                    style={{
-                      fontSize: "40px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    Drag Your Website
-                  </div>
+                {destinationBoxItems.length === 0 ? (
+                  <EmptyBoxMessage>
+                    Drag a Your Website Template
+                  </EmptyBoxMessage>
+                ) : (
+                  destinationBoxItems.map((item, index) =>
+                    renderDraggableItem(item, index, "destination")
+                  )
                 )}
-                {destinationBoxItems.map((item, index) => (
-                  <Draggable key={item.id} draggableId={item.id} index={index}>
-                    {(provided: any) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        style={{
-                          userSelect: "none",
-                          padding: "8px",
-                          margin: "0 0 8px 0",
-                          minHeight: "50px",
-                          backgroundColor: "#fff",
-                          border: "1px solid #ddd",
-                          borderRadius: "4px",
-                          ...provided.draggableProps.style,
-                        }}
-                      >
-                        <img
-                          src={item.imageUrl}
-                          width={"100%"}
-                          alt={item.content}
-                        />
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
                 {provided.placeholder}
-              </div>
+              </DroppableContainer>
             )}
           </Droppable>
-          <DeployButtonContainer>
-            <DeployButton onClick={handleDeploy}>Deploy</DeployButton>
-          </DeployButtonContainer>
+          {renderDeployButton()}
         </MainContent>
-
-        {/* Sidebar - right side */}
         <Sidebar>
           <TabsContainer>
-            <TabButton
-              onClick={() => handleTabClick("header")}
-              active={activeTab === "header"}
-            >
-              Header ({items.header.length})
-            </TabButton>
-            <TabButton
-              onClick={() => handleTabClick("body")}
-              active={activeTab === "body"}
-            >
-              Body ({items.body.length})
-            </TabButton>
-            <TabButton
-              onClick={() => handleTabClick("footer")}
-              active={activeTab === "footer"}
-            >
-              Footer ({items.footer.length})
-            </TabButton>
+            {["header", "body", "footer"].map((tab) => (
+              <TabButton
+                key={tab}
+                onClick={() =>
+                  handleTabClick(tab as "header" | "body" | "footer")
+                }
+                active={activeTab === tab}
+              >
+                {`${tab.charAt(0).toUpperCase()}${tab.slice(1)}`} (
+                {items[tab as keyof ItemsMap].length})
+              </TabButton>
+            ))}
           </TabsContainer>
-
           <Droppable droppableId="source-box">
-            {(provided: any, snapshot: any) => (
-              <div
+            {(provided: any) => (
+              <DroppableItemsContainer
+                activeTab={activeTab}
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                style={{
-                  display:
-                    activeTab === "header"
-                      ? "block"
-                      : activeTab === "body"
-                      ? "block"
-                      : activeTab === "footer"
-                      ? "block"
-                      : "none",
-                  height: "100%",
-                  border: "1px solid #ccc",
-                  padding: "10px",
-                  backgroundColor: snapshot.isDraggingOver
-                    ? "lightblue"
-                    : "inherit",
-                }}
               >
-                {items[activeTab].map((item, index) => (
-                  <Draggable key={item.id} draggableId={item.id} index={index}>
-                    {(provided: any) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        style={{
-                          userSelect: "none",
-                          padding: "8px",
-                          margin: "0 0 8px 0",
-                          minHeight: "50px",
-                          backgroundColor: "#fff",
-                          border: "1px solid #ddd",
-                          borderRadius: "4px",
-                          ...provided.draggableProps.style,
-                        }}
-                      >
-                        <img
-                          src={item.imageUrl}
-                          alt={item.content}
-                          style={{ maxWidth: "100%" }}
-                        />
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-
+                {items[activeTab].map((item, index) =>
+                  renderDraggableItem(item, index, "source")
+                )}
                 {provided.placeholder}
-              </div>
+              </DroppableItemsContainer>
             )}
           </Droppable>
         </Sidebar>

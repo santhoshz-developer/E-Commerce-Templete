@@ -12,6 +12,8 @@
     "next": "14.2.4",
     "react": "^18",
     "react-beautiful-dnd-next": "^11.0.5",
+    "react-dom": "^18.3.1",
+    "react-icons": "^5.2.1",
     "styled-components": "^6.1.11"
   },
   "devDependencies": {

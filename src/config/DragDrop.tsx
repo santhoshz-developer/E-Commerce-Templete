@@ -1,4 +1,6 @@
-export const initialItems = {
+import { ItemsMap } from "@/page-component/templete-creation/TempleteCreation";
+
+export const initialItems: ItemsMap = {
   header: [
     {
       id: "1",
