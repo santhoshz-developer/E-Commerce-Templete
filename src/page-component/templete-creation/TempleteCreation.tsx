@@ -24,20 +24,9 @@ import {
 } from "./TempleteCreation.style";
 import { MdDragIndicator } from "react-icons/md";
 import { IoClose } from "react-icons/io5";
+import { Item, ItemsMap } from "./types";
 
-interface Item {
-  id: string;
-  content: string;
-  imageUrl: string;
-}
-
-export type ItemsMap = {
-  header: Item[];
-  body: Item[];
-  footer: Item[];
-};
-
-const DragAndDropExample: React.FC = () => {
+const DragAndDropExample = () => {
   const [items, setItems] = useState<ItemsMap>(initialItems);
   const [destinationBoxItems, setDestinationBoxItems] = useState<Item[]>([]);
   const [activeTab, setActiveTab] = useState<"header" | "body" | "footer">(
