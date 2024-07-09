@@ -18,7 +18,7 @@ export const CloseButton = styled.button`
   border: none;
   color: red;
   cursor: pointer;
-  font-size: 25px;
+  font-size: 20px;
 `;
 
 export const HeaderDropBox = styled.div`
@@ -69,7 +69,7 @@ export const MainContent = styled.div`
 `;
 
 export const DroppableContainer = styled.div`
-  min-height: 100vh;
+  min-height: 88vh;
   padding: 8px;
   border: 1px dashed #ccc;
   background-color: #f4f4f4;

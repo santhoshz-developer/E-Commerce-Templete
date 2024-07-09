@@ -4,40 +4,51 @@ import {
   Draggable,
   Droppable,
 } from "react-beautiful-dnd-next";
+import { MdDragIndicator } from "react-icons/md";
+import { IoClose } from "react-icons/io5";
+import { Item, ItemsMap } from "./types";
 import { initialItems } from "@/config/DragDrop";
+import { HeaderCollections } from "@/config/strapi.config/header.config";
+import { BodyCollections } from "@/config/strapi.config/body.config";
+import { FooterCollections } from "@/config/strapi.config/footer.config";
+import { createStrapiCollection } from "@/service/Service";
+
 import {
   DraggableItem,
   CloseButton,
+  DeployButtonContainer,
+  DeployButton,
   HeaderDropBox,
   BodyDropBox,
   FooterDropBox,
+  DragHandle,
   MainContent,
   DroppableContainer,
-  DeployButtonContainer,
-  DeployButton,
+  EmptyBoxMessage,
   Sidebar,
   TabsContainer,
   TabButton,
   DroppableItemsContainer,
-  DragHandle,
-  EmptyBoxMessage,
 } from "./TempleteCreation.style";
-import { MdDragIndicator } from "react-icons/md";
-import { IoClose } from "react-icons/io5";
-import { Item, ItemsMap } from "./types";
 
-const DragAndDropExample = () => {
+const TABS = ["header", "body", "footer"] as const;
+type Tab = (typeof TABS)[number];
+
+const getFormData = (items: Item[], collections: any) =>
+  items.map((item) => {
+    const key = item.content.toLowerCase().replace(" ", "");
+    return collections[key as keyof typeof collections];
+  });
+
+const DragAndDropExample: React.FC = () => {
   const [items, setItems] = useState<ItemsMap>(initialItems);
   const [destinationBoxItems, setDestinationBoxItems] = useState<Item[]>([]);
-  const [activeTab, setActiveTab] = useState<"header" | "body" | "footer">(
-    "header"
-  );
+  const [activeTab, setActiveTab] = useState<Tab>("header");
 
   const onDragEnd = (result: any) => {
     const { source, destination } = result;
-    if (!destination) {
-      return;
-    }
+    if (!destination) return;
+
     if (destination.droppableId === "destination-box") {
       handleDestinationBoxDrop(source, destination);
     }
@@ -46,7 +57,7 @@ const DragAndDropExample = () => {
   const handleDestinationBoxDrop = (source: any, destination: any) => {
     if (source.droppableId === "destination-box") {
       // Reorder within the destination box
-      const newItems = [...destinationBoxItems];
+      const newItems = Array.from(destinationBoxItems);
       const [reorderedItem] = newItems.splice(source.index, 1);
       newItems.splice(destination.index, 0, reorderedItem);
       setDestinationBoxItems(newItems);
@@ -54,37 +65,28 @@ const DragAndDropExample = () => {
       // Move from source box to destination box
       const draggedItem = createDraggedItem(source);
       const newDestinationItems = [...destinationBoxItems];
+
       if (activeTab === "header") {
-        newDestinationItems.unshift(draggedItem); // Insert at the top
+        newDestinationItems.unshift(draggedItem);
       } else if (activeTab === "body") {
         const middleIndex = Math.ceil(newDestinationItems.length / 2);
-        newDestinationItems.splice(middleIndex, 0, draggedItem); // Insert in the middle
+        newDestinationItems.splice(middleIndex, 0, draggedItem);
       } else if (activeTab === "footer") {
-        newDestinationItems.push(draggedItem); // Insert at the bottom
+        newDestinationItems.push(draggedItem);
       }
       setDestinationBoxItems(newDestinationItems);
     }
   };
 
-  const createDraggedItem = (source: any) => {
-    const draggedItem = {
-      ...items[activeTab as keyof ItemsMap][source.index],
-      showDeleteButton: false,
-      id: `${
-        items[activeTab as keyof ItemsMap][source.index].id
-      }-${Date.now()}`,
+  const createDraggedItem = (source: any): Item => {
+    const item = items[activeTab][source.index];
+    return {
+      ...item,
+      id: `${item.id}-${Date.now()}`,
     };
-    return draggedItem as Item;
   };
 
-  const handleTabClick = (tab: "header" | "body" | "footer") => {
-    setActiveTab(tab);
-  };
-
-  const handleDeploy = () => {
-    const jsonData = JSON.stringify(destinationBoxItems);
-    console.log(jsonData);
-  };
+  const handleTabClick = (tab: Tab) => setActiveTab(tab);
 
   const handleRemoveItem = (
     itemId: string,
@@ -112,9 +114,9 @@ const DragAndDropExample = () => {
         <DraggableItem
           ref={provided.innerRef}
           {...provided.draggableProps}
-          style={{ ...provided.draggableProps.style }}
+          style={provided.draggableProps.style}
         >
-          {renderDropBox(item, provided)}
+          {renderDropBox(item, provided, source)}
           {source === "destination" && (
             <CloseButton
               onClick={() => handleRemoveItem(item.id, "destination")}
@@ -127,46 +129,66 @@ const DragAndDropExample = () => {
     </Draggable>
   );
 
-  const renderDeployButton = () => {
-    return (
-      <DeployButtonContainer>
-        <DeployButton onClick={handleDeploy}>Deploy</DeployButton>
-      </DeployButtonContainer>
-    );
+  const renderDeployButton = () => (
+    <DeployButtonContainer>
+      <DeployButton onClick={handleDeploy}>Deploy</DeployButton>
+    </DeployButtonContainer>
+  );
+
+  const handleDeploy = async () => {
+    try {
+      const headers = getFormData(
+        destinationBoxItems.filter(
+          (item) => item.id.startsWith("1") || item.id.startsWith("2")
+        ),
+        HeaderCollections
+      );
+      const bodies = getFormData(
+        destinationBoxItems.filter((item) =>
+          ["3", "4", "5", "6"].some((prefix) => item.id.startsWith(prefix))
+        ),
+        BodyCollections
+      );
+      const footers = getFormData(
+        destinationBoxItems.filter((item) => item.id.startsWith("7")),
+        FooterCollections
+      );
+
+      const formData = {
+        header: headers.length > 0 ? headers[0] : null,
+        body: bodies,
+        footer: footers.length > 0 ? footers[0] : null,
+      };
+
+      await createStrapiCollection(formData);
+    } catch (error) {
+      console.error("Error creating eCommerce data:", error);
+    }
   };
 
-  const renderDropBox = (item: Item, provided: any) => {
-    switch (activeTab) {
-      case "header":
-        return (
-          <HeaderDropBox>
-            <DragHandle {...provided.dragHandleProps}>
+  const renderDropBox = (
+    item: Item,
+    provided: any,
+    source: "source" | "destination"
+  ) => {
+    const DropBoxComponent = {
+      header: HeaderDropBox,
+      body: BodyDropBox,
+      footer: FooterDropBox,
+    }[activeTab];
+
+    return (
+      <DropBoxComponent>
+        <DragHandle {...provided.dragHandleProps}>
+          {source === "destination" && (
+            <div style={{ zIndex: "999" }}>
               <MdDragIndicator />
-            </DragHandle>
-            <img src={item.imageUrl} width={"100%"} alt={item.content} />
-          </HeaderDropBox>
-        );
-      case "body":
-        return (
-          <BodyDropBox>
-            <DragHandle {...provided.dragHandleProps}>
-              <MdDragIndicator />
-            </DragHandle>
-            <img src={item.imageUrl} width={"100%"} alt={item.content} />
-          </BodyDropBox>
-        );
-      case "footer":
-        return (
-          <FooterDropBox>
-            <DragHandle {...provided.dragHandleProps}>
-              <MdDragIndicator />
-            </DragHandle>
-            <img src={item.imageUrl} width={"100%"} alt={item.content} />
-          </FooterDropBox>
-        );
-      default:
-        return null;
-    }
+            </div>
+          )}
+          <img src={item.imageUrl} width={"100%"} alt={item.content} />
+        </DragHandle>
+      </DropBoxComponent>
+    );
   };
 
   return (
@@ -196,16 +218,14 @@ const DragAndDropExample = () => {
         </MainContent>
         <Sidebar>
           <TabsContainer>
-            {["header", "body", "footer"].map((tab) => (
+            {TABS.map((tab) => (
               <TabButton
                 key={tab}
-                onClick={() =>
-                  handleTabClick(tab as "header" | "body" | "footer")
-                }
+                onClick={() => handleTabClick(tab)}
                 active={activeTab === tab}
               >
                 {`${tab.charAt(0).toUpperCase()}${tab.slice(1)}`} (
-                {items[tab as keyof ItemsMap].length})
+                {items[tab].length})
               </TabButton>
             ))}
           </TabsContainer>
