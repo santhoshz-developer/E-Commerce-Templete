@@ -12,7 +12,6 @@ import { HeaderCollections } from "@/config/strapi.config/header.config";
 import { BodyCollections } from "@/config/strapi.config/body.config";
 import { FooterCollections } from "@/config/strapi.config/footer.config";
 import { createStrapiCollection } from "@/service/Service";
-
 import {
   DraggableItem,
   CloseButton,
@@ -32,6 +31,7 @@ import {
 } from "./TempleteCreation.style";
 
 const TABS = ["header", "body", "footer"] as const;
+
 type Tab = (typeof TABS)[number];
 
 const getFormData = (items: Item[], collections: any) =>
@@ -48,34 +48,21 @@ const DragAndDropExample: React.FC = () => {
   const onDragEnd = (result: any) => {
     const { source, destination } = result;
     if (!destination) return;
-
     if (destination.droppableId === "destination-box") {
       handleDestinationBoxDrop(source, destination);
     }
   };
 
   const handleDestinationBoxDrop = (source: any, destination: any) => {
+    let newItems = Array.from(destinationBoxItems);
     if (source.droppableId === "destination-box") {
-      // Reorder within the destination box
-      const newItems = Array.from(destinationBoxItems);
       const [reorderedItem] = newItems.splice(source.index, 1);
       newItems.splice(destination.index, 0, reorderedItem);
-      setDestinationBoxItems(newItems);
     } else if (source.droppableId === "source-box") {
-      // Move from source box to destination box
       const draggedItem = createDraggedItem(source);
-      const newDestinationItems = [...destinationBoxItems];
-
-      if (activeTab === "header") {
-        newDestinationItems.unshift(draggedItem);
-      } else if (activeTab === "body") {
-        const middleIndex = Math.ceil(newDestinationItems.length / 2);
-        newDestinationItems.splice(middleIndex, 0, draggedItem);
-      } else if (activeTab === "footer") {
-        newDestinationItems.push(draggedItem);
-      }
-      setDestinationBoxItems(newDestinationItems);
+      newItems.splice(destination.index, 0, draggedItem);
     }
+    setDestinationBoxItems(reorderItems(newItems));
   };
 
   const createDraggedItem = (source: any): Item => {
@@ -84,6 +71,17 @@ const DragAndDropExample: React.FC = () => {
       ...item,
       id: `${item.id}-${Date.now()}`,
     };
+  };
+
+  const reorderItems = (items: Item[]): Item[] => {
+    const headers = items.filter(
+      (item) => item.id.startsWith("1") || item.id.startsWith("2")
+    );
+    const bodies = items.filter((item) =>
+      ["3", "4", "5", "6"].some((prefix) => item.id.startsWith(prefix))
+    );
+    const footers = items.filter((item) => item.id.startsWith("7"));
+    return [...headers, ...bodies, ...footers];
   };
 
   const handleTabClick = (tab: Tab) => setActiveTab(tab);
@@ -153,19 +151,17 @@ const DragAndDropExample: React.FC = () => {
         destinationBoxItems.filter((item) => item.id.startsWith("7")),
         FooterCollections
       );
-
       const formData = {
         header: headers.length > 0 ? headers[0] : null,
         body: bodies,
         footer: footers.length > 0 ? footers[0] : null,
       };
-
       await createStrapiCollection(formData);
     } catch (error) {
       console.error("Error creating eCommerce data:", error);
     }
   };
-
+  
   const renderDropBox = (
     item: Item,
     provided: any,
@@ -176,7 +172,6 @@ const DragAndDropExample: React.FC = () => {
       body: BodyDropBox,
       footer: FooterDropBox,
     }[activeTab];
-
     return (
       <DropBoxComponent>
         <DragHandle {...provided.dragHandleProps}>
@@ -190,7 +185,6 @@ const DragAndDropExample: React.FC = () => {
       </DropBoxComponent>
     );
   };
-
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div style={{ display: "flex" }}>
@@ -248,5 +242,4 @@ const DragAndDropExample: React.FC = () => {
     </DragDropContext>
   );
 };
-
 export default DragAndDropExample;
