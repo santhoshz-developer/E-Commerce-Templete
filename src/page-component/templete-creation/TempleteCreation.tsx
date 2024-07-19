@@ -151,17 +151,19 @@ const DragAndDropExample: React.FC = () => {
         destinationBoxItems.filter((item) => item.id.startsWith("7")),
         FooterCollections
       );
+
       const formData = {
         header: headers.length > 0 ? headers[0] : null,
         body: bodies,
         footer: footers.length > 0 ? footers[0] : null,
       };
+
       await createStrapiCollection(formData);
     } catch (error) {
       console.error("Error creating eCommerce data:", error);
     }
   };
-  
+
   const renderDropBox = (
     item: Item,
     provided: any,
