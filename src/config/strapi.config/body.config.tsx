@@ -11,6 +11,7 @@ export const BodyCollections = {
       },
     ],
     button: { text: "BUY NOW" },
+    template_Id: 1,
   },
   body2: {
     heading: "Browse The Range",
@@ -20,6 +21,7 @@ export const BodyCollections = {
       { id: 2, image: "Living Image", text: "Living" },
       { id: 3, image: "Bedroom Image", text: "Bedroom" },
     ],
+    template_Id: 2,
   },
   body3: {
     heading: "50+ Beautiful rooms inspiration",
@@ -32,6 +34,7 @@ export const BodyCollections = {
       { id: 3, image: "carousel Image 3", text: "Image 3 Text" },
       { id: 4, image: "carousel Image 4", text: "Image 4 Text" },
     ],
+    template_Id: 3,
   },
   body4: {
     heading: "Our Products",
@@ -94,5 +97,6 @@ export const BodyCollections = {
         price: "Rp 500.000",
       },
     ],
+    template_Id: 4,
   },
 };
