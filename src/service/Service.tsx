@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:1337/api/e-commerces";
+const API_URL = "https://strong-bee-4932a093ba.strapiapp.com/api/e-commerces";
 
 export const createStrapiCollection = async (formData: any) => {
   try {
