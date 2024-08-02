@@ -29,6 +29,7 @@ import {
   TabButton,
   DroppableItemsContainer,
 } from "./TempleteCreation.style";
+import { ProductDetails } from "@/config/strapi.config/productDetails/ProductDestils";
 
 const TABS = ["header", "body", "footer"] as const;
 
