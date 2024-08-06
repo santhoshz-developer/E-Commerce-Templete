@@ -9,4 +9,6 @@ export type ItemsMap = {
   header: Item[];
   body: Item[];
   footer: Item[];
+  productlist: Item[];
+  description : Item[]
 };

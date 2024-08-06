@@ -42,4 +42,28 @@ export const initialItems: ItemsMap = {
       imageUrl: "images/footer.png",
     },
   ],
+  productlist : [
+    {
+      id: "8",
+      content: "Product 1",
+      imageUrl: "images/filter.png",
+    },
+    {
+      id: "9",
+      content: "Product 2",
+      imageUrl: "images/pro.png",
+    }
+  ],
+  description :[
+    {
+      id:"10",
+      content: "desc 1",
+      imageUrl: "images/descp0.png",
+    },
+    {
+      id:"11",
+      content: "desc 2",
+      imageUrl: "images/descp.png",
+    }
+  ]
 };
