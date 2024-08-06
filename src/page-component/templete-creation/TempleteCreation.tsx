@@ -34,6 +34,7 @@ import {
   NextButton,
   ButtonContainer,
 } from "./TempleteCreation.style";
+import { ProductDetails } from "@/config/strapi.config/productDetails/ProductDestils";
 
 const TABS = ["header", "body", "footer", "productlist", "description"] as const;
 
