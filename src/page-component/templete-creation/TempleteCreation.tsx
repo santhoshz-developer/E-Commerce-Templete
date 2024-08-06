@@ -20,6 +20,8 @@ import {
   HeaderDropBox,
   BodyDropBox,
   FooterDropBox,
+  ProductDropBox,
+  DescriptionDropBox,
   DragHandle,
   MainContent,
   DroppableContainer,
@@ -28,10 +30,13 @@ import {
   TabsContainer,
   TabButton,
   DroppableItemsContainer,
+  PreviousButton,
+  NextButton,
+  ButtonContainer,
 } from "./TempleteCreation.style";
 import { ProductDetails } from "@/config/strapi.config/productDetails/ProductDestils";
 
-const TABS = ["header", "body", "footer"] as const;
+const TABS = ["header", "body", "footer", "productlist", "description"] as const;
 
 type Tab = (typeof TABS)[number];
 
@@ -45,6 +50,8 @@ const DragAndDropExample: React.FC = () => {
   const [items, setItems] = useState<ItemsMap>(initialItems);
   const [destinationBoxItems, setDestinationBoxItems] = useState<Item[]>([]);
   const [activeTab, setActiveTab] = useState<Tab>("header");
+  const [currentIndex, setCurrentIndex] = useState<any>(0);
+  const displayCount = 3; 
 
   const onDragEnd = (result: any) => {
     const { source, destination } = result;
@@ -76,13 +83,20 @@ const DragAndDropExample: React.FC = () => {
 
   const reorderItems = (items: Item[]): Item[] => {
     const headers = items.filter(
-      (item) => item.id.startsWith("1") || item.id.startsWith("2")
+      (item) => item.id.split("-")[0]==="1" || item.id.split("-")[0]==="2"
     );
-    const bodies = items.filter((item) =>
-      ["3", "4", "5", "6"].some((prefix) => item.id.startsWith(prefix))
+    const bodies = items.filter(
+      (item) =>
+        ["3", "4", "5", "6"].some((prefix) => item.id.startsWith(prefix))
     );
     const footers = items.filter((item) => item.id.startsWith("7"));
-    return [...headers, ...bodies, ...footers];
+    const productlist = items.filter(
+      (item) => ["8", "9"].some((prefix) => item.id.startsWith(prefix))
+    );
+    const description = items.filter(
+      (item) => ["10", "11"].some((prefix) => item.id.startsWith(prefix))
+    );
+    return [...headers, ...bodies, ...footers, ...productlist, ...description];
   };
 
   const handleTabClick = (tab: Tab) => setActiveTab(tab);
@@ -101,6 +115,18 @@ const DragAndDropExample: React.FC = () => {
         prevItems.filter((item) => item.id !== itemId)
       );
     }
+  };
+
+  const handleNextButtonClick = () => {
+    console.log("Next button clicked!");
+    setCurrentIndex((prevIndex:any) => prevIndex + displayCount);
+    setActiveTab("productlist")
+  };
+
+  const handlePreviousButtonClick = () => {
+    console.log("Previous button clicked!");
+    setActiveTab("header")
+    setCurrentIndex((prevIndex:any) => Math.max(prevIndex - displayCount, 0));
   };
 
   const renderDraggableItem = (
@@ -152,7 +178,6 @@ const DragAndDropExample: React.FC = () => {
         destinationBoxItems.filter((item) => item.id.startsWith("7")),
         FooterCollections
       );
-
       const formData = {
         header: headers.length > 0 ? headers[0] : null,
         body: bodies,
@@ -174,9 +199,12 @@ const DragAndDropExample: React.FC = () => {
       header: HeaderDropBox,
       body: BodyDropBox,
       footer: FooterDropBox,
-    }[activeTab];
+      productlist: ProductDropBox,
+      description: DescriptionDropBox,
+    };
+    const DropBox = DropBoxComponent[activeTab];
     return (
-      <DropBoxComponent>
+      <DropBox>
         <DragHandle {...provided.dragHandleProps}>
           {source === "destination" && (
             <div style={{ zIndex: "999" }}>
@@ -185,9 +213,35 @@ const DragAndDropExample: React.FC = () => {
           )}
           <img src={item.imageUrl} width={"100%"} alt={item.content} />
         </DragHandle>
-      </DropBoxComponent>
+      </DropBox>
     );
   };
+
+  const renderSourceBox = () => (
+    <>
+      <Droppable droppableId="source-box">
+        {(provided: any) => (
+          <DroppableItemsContainer
+            activeTab={activeTab}
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+          >
+            {items[activeTab].map((item, index) =>
+              renderDraggableItem(item, index, "source")
+            )}
+            {provided.placeholder}
+          </DroppableItemsContainer>
+        )}
+      </Droppable>
+
+      <ButtonContainer>
+      <PreviousButton onClick={handlePreviousButtonClick}>Previous</PreviousButton>         
+       
+        <NextButton onClick={handleNextButtonClick}>Next</NextButton>
+      </ButtonContainer>
+    </>
+  );
+
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div style={{ display: "flex" }}>
@@ -200,7 +254,7 @@ const DragAndDropExample: React.FC = () => {
               >
                 {destinationBoxItems.length === 0 ? (
                   <EmptyBoxMessage>
-                    Drag a Your Website Template
+                  Drag and Drop here
                   </EmptyBoxMessage>
                 ) : (
                   destinationBoxItems.map((item, index) =>
@@ -215,10 +269,11 @@ const DragAndDropExample: React.FC = () => {
         </MainContent>
         <Sidebar>
           <TabsContainer>
-            {TABS.map((tab) => (
+            {TABS.slice(currentIndex, currentIndex + displayCount).map((tab) => (
               <TabButton
                 key={tab}
-                onClick={() => handleTabClick(tab)}
+                onClick={() => {
+                  handleTabClick(tab)}}
                 active={activeTab === tab}
               >
                 {`${tab.charAt(0).toUpperCase()}${tab.slice(1)}`} (
@@ -226,23 +281,11 @@ const DragAndDropExample: React.FC = () => {
               </TabButton>
             ))}
           </TabsContainer>
-          <Droppable droppableId="source-box">
-            {(provided: any) => (
-              <DroppableItemsContainer
-                activeTab={activeTab}
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-              >
-                {items[activeTab].map((item, index) =>
-                  renderDraggableItem(item, index, "source")
-                )}
-                {provided.placeholder}
-              </DroppableItemsContainer>
-            )}
-          </Droppable>
+          {renderSourceBox()}
         </Sidebar>
       </div>
     </DragDropContext>
   );
 };
+
 export default DragAndDropExample;

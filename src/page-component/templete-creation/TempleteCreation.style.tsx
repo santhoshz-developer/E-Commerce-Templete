@@ -1,5 +1,61 @@
 import styled from "styled-components";
 
+export const ButtonContainer = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+`;
+
+export const DeployButtonContainer = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+`;
+
+export const DeployButton = styled.button`
+  background-color: #007bff;
+  border: none;
+  border-radius: 1px;
+  padding: 10px 20px;
+  color: white;
+  cursor: pointer;
+  font-size: 12px;
+  &:hover {
+    background-color: #0056b3;
+  }
+`;
+
+export const PreviousButton = styled.button`
+  background-color: #007bff;
+  border: none;
+  border-radius: 1px;
+  padding: 10px 20px;
+  color: white;
+  cursor: pointer;
+  font-size: 12px;
+  margin-right: 200px;
+  &:hover {
+    background-color: #0056b3;
+  }
+`;
+
+export const NextButton = styled.button`
+  background-color: #007bff;
+  border: none;
+  border-radius: 1px;
+  padding: 10px 20px;
+  color: white;
+  cursor: pointer;
+  font-size: 12px;
+  
+  &:hover {
+    background-color: #0056b3;
+  }
+`;
+
 export const DraggableItem = styled.div`
   position: relative;
   display: flex;
@@ -26,7 +82,30 @@ export const HeaderDropBox = styled.div`
   align-items: center;
   width: 100%;
   overflow: hidden;
+  img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+`;
 
+export const ProductDropBox = styled.div`
+  display: flex;
+  align-items: center;
+  width: 100%;
+  overflow: hidden;
+  img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+`;
+
+export const DescriptionDropBox = styled.div`
+  display: flex;
+  align-items: center;
+  width: 100%;
+  overflow: hidden;
   img {
     width: 100%;
     height: auto;
@@ -39,7 +118,6 @@ export const BodyDropBox = styled.div`
   align-items: center;
   width: 100%;
   overflow: hidden;
-
   img {
     width: 100%;
     height: auto;
@@ -52,7 +130,6 @@ export const FooterDropBox = styled.div`
   align-items: center;
   width: 100%;
   overflow: hidden;
-
   img {
     width: 100%;
     height: auto;
@@ -63,9 +140,14 @@ export const FooterDropBox = styled.div`
 export const MainContent = styled.div`
   flex: 1;
   padding: 16px;
-  border: 1px solid #ccc;
+  border: 5px solid #ccc;
   margin-right: 16px;
-  max-width: calc(100% - 300px);
+  margin-left:10px;
+  margin-bottom:5px;
+  max-width: calc(100% - 340px);
+  display: flex;
+  flex-direction: column;
+  
 `;
 
 export const DroppableContainer = styled.div`
@@ -73,30 +155,18 @@ export const DroppableContainer = styled.div`
   padding: 8px;
   border: 1px dashed #ccc;
   background-color: #f4f4f4;
+  flex: 1;
 `;
 
-export const DeployButtonContainer = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 16px;
-`;
-
-export const DeployButton = styled.button`
-  padding: 8px 16px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  cursor: pointer;
-  &:hover {
-    background-color: #0056b3;
-  }
-`;
 
 export const Sidebar = styled.div`
-  width: 340px;
-  border: 1px solid #ccc;
+  width: 400px;
+  border: 5px solid #ccc;
   display: flex;
   flex-direction: column;
+  position: relative;
+  margin-right:10px;
+  margin-bottom:5px;
 `;
 
 export const TabsContainer = styled.div`
@@ -135,4 +205,17 @@ export const EmptyBoxMessage = styled.div`
   text-align: center;
   padding: 20px;
   font-size: 40px;
+`;
+
+export const SourceBoxContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin-top: auto;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 340px;
+  padding: 16px;
+  background: #f4f4f4;
+  border-left: 1px solid #ccc;
 `;
